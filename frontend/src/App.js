@@ -10,7 +10,7 @@ function App() {
 
   const [color, setColor] = useState("#000000");
   const [size, setSize] = useState(2);
-  const [strokes, setStrokes] = useState([]);
+  const [_strokes, setStrokes] = useState([]);
   const [cursors, setCursors] = useState({});
   const [activeDrawer, setActiveDrawer] = useState(null);
 
