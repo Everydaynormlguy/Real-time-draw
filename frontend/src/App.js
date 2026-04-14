@@ -10,7 +10,7 @@ function App() {
 
   const [color, setColor] = useState("#000000");
   const [size, setSize] = useState(2);
-  const [ , setStrokes] = useState([]);
+  const [, setStrokes] = useState([]);
   const [cursors, setCursors] = useState({});
   const [activeDrawer, setActiveDrawer] = useState(null);
 
@@ -63,13 +63,10 @@ function App() {
       }));
     });
 
-    // 🔥 drawing status
+    // active drawing user
     socket.on("drawing_status", ({ isDrawing, id }) => {
-      if (isDrawing) {
-        setActiveDrawer(id);
-      } else {
-        setActiveDrawer(null);
-      }
+      if (isDrawing) setActiveDrawer(id);
+      else setActiveDrawer(null);
     });
 
     const startDrawing = (e) => {
@@ -113,7 +110,6 @@ function App() {
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
 
-      // cursor movement
       socket.emit("cursor_move", {
         x,
         y,
@@ -131,21 +127,49 @@ function App() {
       ctx.lineTo(x, y);
       ctx.stroke();
 
-      // live drawing
       socket.emit("draw_live", {
         room: "room1",
         point: { x, y, color, size },
       });
     };
 
+    // 🖱️ mouse events
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mouseup", stopDrawing);
     canvas.addEventListener("mousemove", draw);
+
+    // 📱 mobile touch support
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      startDrawing({
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+    });
+
+    canvas.addEventListener("touchend", (e) => {
+      e.preventDefault();
+      stopDrawing();
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      draw({
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+      });
+    });
 
     return () => {
       canvas.removeEventListener("mousedown", startDrawing);
       canvas.removeEventListener("mouseup", stopDrawing);
       canvas.removeEventListener("mousemove", draw);
+
+      canvas.removeEventListener("touchstart", startDrawing);
+      canvas.removeEventListener("touchend", stopDrawing);
+      canvas.removeEventListener("touchmove", draw);
 
       socket.off("init");
       socket.off("draw_live");
@@ -220,10 +244,11 @@ function App() {
           style={{
             border: "2px solid black",
             cursor: "crosshair",
+            touchAction: "none",
           }}
         />
 
-        {/* 🔥 only one active cursor */}
+        {/* 👥 active cursor */}
         {Object.entries(cursors).map(([id, pos]) => {
           if (activeDrawer && activeDrawer !== id) return null;
 
