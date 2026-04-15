@@ -14,6 +14,16 @@ function App() {
   const [cursors, setCursors] = useState({});
   const [activeDrawer, setActiveDrawer] = useState(null);
 
+  const btnStyle = (bg) => ({
+    padding: "8px 14px",
+    borderRadius: "10px",
+    border: "none",
+    background: bg,
+    color: "white",
+    cursor: "pointer",
+    transition: "0.2s",
+  });
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -23,24 +33,19 @@ function App() {
 
     socket.emit("join_room", "room1");
 
-    // load drawing
     socket.on("init", (data) => {
       setStrokes(data);
       redrawCanvas(data);
     });
 
-    // live drawing
     socket.on("draw_live", ({ x, y, color, size }) => {
       const ctx = canvasRef.current.getContext("2d");
-
       ctx.strokeStyle = color;
       ctx.lineWidth = size;
-
       ctx.lineTo(x, y);
       ctx.stroke();
     });
 
-    // final stroke
     socket.on("draw_stroke", (stroke) => {
       setStrokes((prev) => {
         const updated = [...prev, stroke];
@@ -49,13 +54,11 @@ function App() {
       });
     });
 
-    // undo / clear
     socket.on("update_canvas", (data) => {
       setStrokes(data);
       redrawCanvas(data);
     });
 
-    // cursor
     socket.on("cursor_move", ({ x, y, id }) => {
       setCursors((prev) => ({
         ...prev,
@@ -63,7 +66,6 @@ function App() {
       }));
     });
 
-    // active drawing user
     socket.on("drawing_status", ({ isDrawing, id }) => {
       if (isDrawing) setActiveDrawer(id);
       else setActiveDrawer(null);
@@ -133,12 +135,12 @@ function App() {
       });
     };
 
-    // 🖱️ mouse events
+    // Mouse events
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mouseup", stopDrawing);
     canvas.addEventListener("mousemove", draw);
 
-    // 📱 mobile touch support
+    // Touch events (mobile)
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       const touch = e.touches[0];
@@ -207,66 +209,95 @@ function App() {
   };
 
   return (
-    <div style={{ textAlign: "center" }}>
-      <h2>Real-time Drawing App 🎨</h2>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #667eea, #764ba2)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Poppins, sans-serif",
+      }}
+    >
+      <div
+        style={{
+          width: "90%",
+          maxWidth: "1000px",
+          background: "rgba(255,255,255,0.1)",
+          backdropFilter: "blur(20px)",
+          borderRadius: "20px",
+          padding: "20px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+        }}
+      >
+        <h2 style={{ color: "white", marginBottom: "15px" }}>
+          🎨 Draw Together
+        </h2>
 
-      <div style={{ marginBottom: "10px" }}>
-        <label>Color: </label>
-        <input
-          type="color"
-          value={color}
-          onChange={(e) => setColor(e.target.value)}
-        />
+        <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            style={{
+              width: "45px",
+              height: "45px",
+              borderRadius: "10px",
+              border: "none",
+            }}
+          />
 
-        <label style={{ marginLeft: "10px" }}>Brush Size: </label>
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={size}
-          onChange={(e) => setSize(e.target.value)}
-        />
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={size}
+            onChange={(e) => setSize(e.target.value)}
+          />
 
-        <button onClick={undoLast} style={{ marginLeft: "10px" }}>
-          Undo
-        </button>
+          <button onClick={undoLast} style={btnStyle("#4f46e5")}>
+            Undo
+          </button>
 
-        <button onClick={clearCanvas} style={{ marginLeft: "10px" }}>
-          Clear
-        </button>
-      </div>
+          <button onClick={clearCanvas} style={btnStyle("#ef4444")}>
+            Clear
+          </button>
+        </div>
 
-      <div style={{ position: "relative", display: "inline-block" }}>
-        <canvas
-          ref={canvasRef}
-          width={800}
-          height={600}
-          style={{
-            border: "2px solid black",
-            cursor: "crosshair",
-            touchAction: "none",
-          }}
-        />
+        <div style={{ position: "relative" }}>
+          <canvas
+            ref={canvasRef}
+            width={800}
+            height={600}
+            style={{
+              width: "100%",
+              borderRadius: "15px",
+              background: "white",
+              cursor: "crosshair",
+              touchAction: "none",
+            }}
+          />
 
-        {/* 👥 active cursor */}
-        {Object.entries(cursors).map(([id, pos]) => {
-          if (activeDrawer && activeDrawer !== id) return null;
+          {Object.entries(cursors).map(([id, pos]) => {
+            if (activeDrawer && activeDrawer !== id) return null;
 
-          return (
-            <div
-              key={id}
-              style={{
-                position: "absolute",
-                left: pos.x,
-                top: pos.y,
-                pointerEvents: "none",
-                fontSize: "20px",
-              }}
-            >
-              🖊️
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={id}
+                style={{
+                  position: "absolute",
+                  left: pos.x,
+                  top: pos.y,
+                  pointerEvents: "none",
+                  fontSize: "20px",
+                  filter: "drop-shadow(0 0 5px white)",
+                }}
+              >
+                🖊️
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

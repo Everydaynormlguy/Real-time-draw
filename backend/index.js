@@ -6,6 +6,11 @@ const cors = require("cors");
 const app = express();
 app.use(cors());
 
+// ✅ ADD THIS ROUTE
+app.get("/", (req, res) => {
+  res.send("🎨 Real-time Draw Backend is running 🚀");
+});
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -25,15 +30,12 @@ io.on("connection", (socket) => {
     socket.emit("init", rooms[room]);
   });
 
-  // 🔥 live drawing
   socket.on("draw_live", ({ room, point }) => {
     socket.to(room).emit("draw_live", point);
   });
 
-  // 🔥 final stroke
   socket.on("draw_stroke", ({ room, stroke }) => {
     if (!rooms[room]) rooms[room] = [];
-
     rooms[room].push(stroke);
     io.to(room).emit("draw_stroke", stroke);
   });
@@ -50,12 +52,10 @@ io.on("connection", (socket) => {
     io.to(room).emit("update_canvas", []);
   });
 
-  // 🔥 cursor movement
   socket.on("cursor_move", ({ room, x, y, id }) => {
     socket.to(room).emit("cursor_move", { x, y, id });
   });
 
-  // 🔥 drawing status (for active cursor)
   socket.on("drawing_status", ({ room, isDrawing, id }) => {
     socket.to(room).emit("drawing_status", { isDrawing, id });
   });
