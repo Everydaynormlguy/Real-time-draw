@@ -20,6 +20,15 @@ function App() {
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
+    // 🔥 FIX: responsive canvas
+    const resizeCanvas = () => {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    };
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
     socket.emit("join_room", "room1");
 
     socket.on("init", (data) => {
@@ -127,6 +136,8 @@ function App() {
       socket.off("update_canvas");
       socket.off("draw_live");
 
+      window.removeEventListener("resize", resizeCanvas);
+
       canvas.removeEventListener("mousedown", startDrawing);
       canvas.removeEventListener("mouseup", stopDrawing);
       canvas.removeEventListener("mousemove", draw);
@@ -180,7 +191,7 @@ function App() {
       <div
         style={{
           width: "95%",
-          maxWidth: "900px",
+          maxWidth: "1000px",
           background: "rgba(255,255,255,0.6)",
           backdropFilter: "blur(15px)",
           borderRadius: "25px",
@@ -256,10 +267,9 @@ function App() {
 
         <canvas
           ref={canvasRef}
-          width={800}
-          height={600}
           style={{
             width: "100%",
+            height: "75vh", // 🔥 BIG CANVAS
             borderRadius: "20px",
             background: "white",
             boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
