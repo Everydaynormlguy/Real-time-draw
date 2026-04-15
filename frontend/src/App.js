@@ -13,15 +13,6 @@ function App() {
   const [size, setSize] = useState(2);
   const [, setStrokes] = useState([]);
 
-  const btnStyle = (bg) => ({
-    padding: "8px 14px",
-    borderRadius: "10px",
-    border: "none",
-    background: bg,
-    color: "white",
-    cursor: "pointer",
-  });
-
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -31,7 +22,6 @@ function App() {
 
     socket.emit("join_room", "room1");
 
-    // 🔥 INIT + SYNC
     socket.on("init", (data) => {
       setStrokes(data);
       redrawCanvas(data);
@@ -42,7 +32,6 @@ function App() {
       redrawCanvas(data);
     });
 
-    // 🔥 FIXED LIVE DRAW (SMOOTH)
     socket.on("draw_live", ({ x, y, prevX, prevY, color, size }) => {
       ctx.strokeStyle = color;
       ctx.lineWidth = size;
@@ -115,12 +104,12 @@ function App() {
       lastPoint.current = { x, y };
     };
 
-    // 🖱️ mouse
+    // mouse
     canvas.addEventListener("mousedown", startDrawing);
     canvas.addEventListener("mouseup", stopDrawing);
     canvas.addEventListener("mousemove", draw);
 
-    // 📱 touch
+    // touch
     canvas.addEventListener("touchstart", (e) => {
       e.preventDefault();
       startDrawing(e.touches[0]);
@@ -148,7 +137,6 @@ function App() {
     };
   }, [color, size]);
 
-  // 🔥 PERFECT REDRAW
   const redrawCanvas = (allStrokes) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
@@ -179,31 +167,106 @@ function App() {
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h2>🎨 Draw Together</h2>
-
-      <div style={{ marginBottom: "10px" }}>
-        <input type="color" value={color} onChange={(e) => setColor(e.target.value)} />
-        <input type="range" min="1" max="10" value={size} onChange={(e) => setSize(e.target.value)} />
-
-        <button onClick={undoLast} style={btnStyle("#4f46e5")}>
-          Undo
-        </button>
-        <button onClick={clearCanvas} style={btnStyle("#ef4444")}>
-          Clear
-        </button>
-      </div>
-
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={600}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #ffecd2, #fcb69f)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        fontFamily: "Poppins, sans-serif",
+      }}
+    >
+      <div
         style={{
-          border: "2px solid black",
-          borderRadius: "10px",
-          touchAction: "none",
+          width: "95%",
+          maxWidth: "900px",
+          background: "rgba(255,255,255,0.6)",
+          backdropFilter: "blur(15px)",
+          borderRadius: "25px",
+          padding: "20px",
+          boxShadow: "0 15px 40px rgba(0,0,0,0.15)",
+          textAlign: "center",
         }}
-      />
+      >
+        <h2 style={{ marginBottom: "15px" }}>
+          🎨 Draw Together 💖
+        </h2>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            justifyContent: "center",
+            flexWrap: "wrap",
+            marginBottom: "15px",
+          }}
+        >
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            style={{
+              width: "45px",
+              height: "45px",
+              borderRadius: "12px",
+              border: "none",
+            }}
+          />
+
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={size}
+              onChange={(e) => setSize(e.target.value)}
+            />
+            <span style={{ marginLeft: "6px" }}>🖌️ {size}</span>
+          </div>
+
+          <button
+            onClick={undoLast}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "none",
+              background: "#6366f1",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Undo
+          </button>
+
+          <button
+            onClick={clearCanvas}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "20px",
+              border: "none",
+              background: "#f43f5e",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Clear
+          </button>
+        </div>
+
+        <canvas
+          ref={canvasRef}
+          width={800}
+          height={600}
+          style={{
+            width: "100%",
+            borderRadius: "20px",
+            background: "white",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+            touchAction: "none",
+          }}
+        />
+      </div>
     </div>
   );
 }
